@@ -24,7 +24,7 @@ const CONFIG = {
   TELEGRAM_WEBHOOK: 'https://YOUR_N8N_OR_MAKE_WEBHOOK_URL/telegram',
   
   // Google Sheets webhook (Google Apps Script web app URL)
-  GOOGLE_SHEETS_WEBHOOK: 'https://script.google.com/macros/s/AKfycbxrIdVfq1c9g0sju3rWpx6Tit4eXRqpCP0sgdDNwfgVn6oqANVKM2RHtiU-PXud6mIc/exec',
+  GOOGLE_SHEETS_WEBHOOK: 'https://script.google.com/macros/s/AKfycbyjN02CnDiDHR8SBrsm8nYuiXAQHscWr9JTjr1CNE21T368EdyU2n5oKSIAg8Fkdo-p/exec',
   
   // Telegram chat ID куда слать уведомления (ваш личный или группа)
   TELEGRAM_CHAT_ID: '@gavchik_gatchina',
@@ -281,18 +281,47 @@ async function sendToGoogleSheets(data) {
     return { success: true };
   }
 
-  try {
-    // Google Apps Script требует no-cors или передачу через URL-параметры
-    const params = new URLSearchParams(payload);
-    await fetch(CONFIG.GOOGLE_SHEETS_WEBHOOK + '?' + params.toString(), {
-      method: 'GET',
-      mode: 'no-cors'
-    });
-    return { success: true };
-  } catch (e) {
-    console.error('[Google Sheets] Ошибка:', e);
-    return null;
-  }
+  return new Promise((resolve) => {
+    try {
+      // Используем скрытый iframe + форма — единственный надёжный способ отправить
+      // данные в Google Apps Script без CORS-ошибок. Fetch с no-cors теряет параметры
+      // при редиректе с script.google.com → script.googleusercontent.com.
+      const iframeId = 'gs-submit-frame-' + Date.now();
+      const iframe = document.createElement('iframe');
+      iframe.name = iframeId;
+      iframe.id = iframeId;
+      iframe.style.cssText = 'display:none;width:0;height:0;border:none;position:absolute;left:-9999px';
+      document.body.appendChild(iframe);
+
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = CONFIG.GOOGLE_SHEETS_WEBHOOK;
+      form.target = iframeId;
+      form.style.cssText = 'display:none;';
+
+      Object.entries(payload).forEach(([key, value]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = String(value);
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
+
+      // Clean up after a short delay
+      setTimeout(() => {
+        try { document.body.removeChild(form); } catch(e) {}
+        try { document.body.removeChild(iframe); } catch(e) {}
+      }, 5000);
+
+      resolve({ success: true });
+    } catch (e) {
+      console.error('[Google Sheets] Ошибка:', e);
+      resolve(null);
+    }
+  });
 }
 
 async function sendWaitlistEntry(type, phone) {
