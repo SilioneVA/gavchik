@@ -24,7 +24,7 @@ const CONFIG = {
   TELEGRAM_WEBHOOK: 'https://YOUR_N8N_OR_MAKE_WEBHOOK_URL/telegram',
   
   // Google Sheets webhook (Google Apps Script web app URL)
-  GOOGLE_SHEETS_WEBHOOK: 'https://script.google.com/macros/s/AKfycbwfJ3GVQ57RXUU2IHJTf4fGFjzskgxG4PRz9sZM_x37I6wxb0Hwpso9-L9fPSj2i39e/exec',
+  GOOGLE_SHEETS_WEBHOOK: 'https://script.google.com/macros/s/AKfycbxrIdVfq1c9g0sju3rWpx6Tit4eXRqpCP0sgdDNwfgVn6oqANVKM2RHtiU-PXud6mIc/exec',
   
   // Telegram chat ID куда слать уведомления (ваш личный или группа)
   TELEGRAM_CHAT_ID: '@gavchik_gatchina',
