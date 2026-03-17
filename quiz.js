@@ -24,7 +24,7 @@ const CONFIG = {
   TELEGRAM_WEBHOOK: 'https://YOUR_N8N_OR_MAKE_WEBHOOK_URL/telegram',
   
   // Google Sheets webhook (Google Apps Script web app URL)
-  GOOGLE_SHEETS_WEBHOOK: 'https://script.google.com/macros/s/AKfycbzkCt8cbAdDx_tYns1PNdXO-ZgpkbYSChAnKulLWBMq6IDdU2vlMg6cRIC3MXrIG1hJ/exec',
+  GOOGLE_SHEETS_WEBHOOK: 'https://script.google.com/macros/s/AKfycbwfJ3GVQ57RXUU2IHJTf4fGFjzskgxG4PRz9sZM_x37I6wxb0Hwpso9-L9fPSj2i39e/exec',
   
   // Telegram chat ID куда слать уведомления (ваш личный или группа)
   TELEGRAM_CHAT_ID: '@gavchik_gatchina',
@@ -282,12 +282,13 @@ async function sendToGoogleSheets(data) {
   }
 
   try {
-    const res = await fetch(CONFIG.GOOGLE_SHEETS_WEBHOOK, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+    // Google Apps Script требует no-cors или передачу через URL-параметры
+    const params = new URLSearchParams(payload);
+    await fetch(CONFIG.GOOGLE_SHEETS_WEBHOOK + '?' + params.toString(), {
+      method: 'GET',
+      mode: 'no-cors'
     });
-    return res.json();
+    return { success: true };
   } catch (e) {
     console.error('[Google Sheets] Ошибка:', e);
     return null;
