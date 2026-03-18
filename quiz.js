@@ -324,7 +324,28 @@ async function sendToGoogleSheets(data) {
   });
 }
 
+async function sendWaitlistEntry(type, phone) {
+  const typeLabel = type === 'coffee' ? 'Кофейня' : 'Pet Hotel';
+  const message = `☕ *Лист ожидания: ${typeLabel}*\n📞 Контакт: \`${phone}\`\n⏱ ${new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })}`;
+  
+  if (!CONFIG.ENABLED) {
+    console.log('[Waitlist] Данные:', { type, phone });
+    return;
+  }
 
+  try {
+    await fetch(CONFIG.TELEGRAM_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: CONFIG.TELEGRAM_CHAT_ID,
+        text: message,
+        parse_mode: 'Markdown'
+      })
+    });
+  } catch (e) {
+    console.error('[Waitlist] Ошибка:', e);
+  }
 }
 
 // ============================================================
